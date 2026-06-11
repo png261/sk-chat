@@ -37,6 +37,41 @@ import { convertMessage } from './ToolCalls';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { ScrollToBottom } from './ui/scroll-to-bottom';
 
+function formatThreadTime(dateStr: string) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '';
+    
+    const now = new Date();
+    const isToday = d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+      
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.getDate() === yesterday.getDate() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getFullYear() === yesterday.getFullYear();
+
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+
+    if (isToday) {
+      return `${hours}:${minutes}`;
+    } else if (isYesterday) {
+      return `Hôm qua, ${hours}:${minutes}`;
+    } else {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+  } catch (e) {
+    return '';
+  }
+}
+
 export type SkChatSidebarProps = {
   title?: string;
   placeholder?: string;
@@ -358,8 +393,8 @@ export function SkChatSidebar({
                         className={cn(
                           "group relative rounded-xl p-3 text-left transition-all duration-200 flex flex-col gap-1.5 cursor-pointer border",
                           isActive
-                            ? "bg-blue-50 dark:bg-blue-950/40 border-blue-500/40 dark:border-blue-500/30 shadow-sm"
-                            : "bg-transparent border-transparent hover:bg-slate-100/70 dark:hover:bg-slate-800/50"
+                            ? "bg-blue-50/70 dark:bg-blue-950/35 border-blue-200/80 dark:border-blue-900/50 shadow-sm ring-1 ring-blue-100/50 dark:ring-blue-950/40"
+                            : "bg-slate-50/40 dark:bg-slate-900/10 border-slate-100/70 dark:border-slate-800/40 hover:bg-slate-100/80 dark:hover:bg-slate-800/40 hover:border-slate-200/80 dark:hover:border-slate-700/60"
                         )}
                         onClick={() => {
                           setActiveThreadId(thread.id);
@@ -367,7 +402,7 @@ export function SkChatSidebar({
                         }}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <MessageSquare
                               className={cn(
                                 "size-3.5 shrink-0 mt-0.5",
@@ -376,16 +411,22 @@ export function SkChatSidebar({
                             />
                             <span
                               className={cn(
-                                "text-xs font-semibold truncate leading-tight",
+                                "text-xs font-semibold truncate leading-tight pr-5",
                                 isActive
                                   ? "text-blue-600 dark:text-blue-400"
                                   : "text-slate-800 dark:text-slate-200"
                               )}
                             >
-                                {thread.title}
+                              {thread.title}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 relative min-h-[16px]">
+                            {thread.createdAt && (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal transition-opacity duration-150 group-hover:opacity-0 select-none">
+                                {formatThreadTime(thread.createdAt)}
                               </span>
-                            </div>
-                            
+                            )}
                             <button
                               type="button"
                               onClick={(e) => {
@@ -393,38 +434,39 @@ export function SkChatSidebar({
                                 deleteThread(thread.id);
                               }}
                               className={cn(
-                                "opacity-0 group-hover:opacity-100 p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all cursor-pointer border-0 bg-transparent shrink-0"
+                                "opacity-0 group-hover:opacity-100 p-0.5 rounded-md text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer border-0 bg-transparent absolute right-0 top-1/2 -translate-y-1/2"
                               )}
                               title="Xóa cuộc trò chuyện"
                             >
                               <Trash2 className="size-3" />
                             </button>
                           </div>
-
-                          {thread.url && (
-                            <div className="flex items-center justify-between mt-0.5" onClick={(e) => e.stopPropagation()}>
-                              <a
-                                href={thread.url}
-                                onClick={() => setIsHistoryOpen(false)}
-                                className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium max-w-[90%] truncate"
-                              >
-                                <Globe className={cn("size-2.5 shrink-0", isActive ? "text-blue-500/80" : "text-slate-400 dark:text-slate-500")} />
-                                <span className="truncate">{thread.pageTitle || 'Xem trang liên kết'}</span>
-                              </a>
-                              
-                              <a
-                                href={thread.url}
-                                onClick={() => setIsHistoryOpen(false)}
-                                className="inline-flex items-center justify-center size-5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-                                title="Quay lại trang này"
-                              >
-                                <ArrowUpRight className="size-3" />
-                              </a>
-                            </div>
-                          )}
                         </div>
-                      );
-                    })
+
+                        {thread.url && (
+                          <div className="flex items-center justify-between mt-0.5" onClick={(e) => e.stopPropagation()}>
+                            <a
+                              href={thread.url}
+                              onClick={() => setIsHistoryOpen(false)}
+                              className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium max-w-[90%] truncate"
+                            >
+                              <Globe className={cn("size-2.5 shrink-0", isActive ? "text-blue-500/80" : "text-slate-400 dark:text-slate-500")} />
+                              <span className="truncate">{thread.pageTitle || 'Xem trang liên kết'}</span>
+                            </a>
+                            
+                            <a
+                              href={thread.url}
+                              onClick={() => setIsHistoryOpen(false)}
+                              className="inline-flex items-center justify-center size-5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 shrink-0 transition-colors"
+                              title="Quay lại trang này"
+                            >
+                              <ArrowUpRight className="size-3" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                   )}
                 </div>
               </div>
