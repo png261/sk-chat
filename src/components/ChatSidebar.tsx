@@ -244,7 +244,7 @@ export function SkChatSidebar({
         >
           <header
             className={cn(
-              'flex items-center justify-between px-4 py-3 border-b border-border bg-background select-none shrink-0',
+              'flex items-center justify-between px-2.5 py-3 border-b border-border bg-background select-none shrink-0',
               panelMode === 'window' ? 'cursor-move' : '',
             )}
             onPointerDown={onHeaderPointerDown}
@@ -430,11 +430,11 @@ export function SkChatSidebar({
               </div>
             ) : (
               <>
-                <div className="flex-1 flex flex-col p-4 relative min-h-0">
+                <div className="flex-1 flex flex-col px-2.5 py-4 relative min-h-0">
                   <ThreadPrimitive.Root className="h-full flex flex-col justify-between flex-1 relative">
                     <ThreadPrimitive.Viewport className="flex-1 space-y-4 pr-1 overflow-y-auto">
                       {messages.length === 0 ? (
-                        <div className="flex flex-col items-start justify-end h-full px-4 py-8 select-none">
+                        <div className="flex flex-col items-start justify-end h-full px-2 py-8 select-none">
                           <div className="space-y-0.5 mb-6 text-left">
                             <h1 className="text-3xl font-semibold text-blue-600 dark:text-blue-400 tracking-tight leading-tight">
                               Xin chào, {userName}
@@ -551,7 +551,7 @@ export function SkChatSidebar({
                 ) : null}
 
                 <ComposerPrimitive.Unstable_TriggerPopoverRoot>
-                  <ComposerPrimitive.Root className="p-3 border-t border-border bg-background flex flex-col gap-2 shrink-0 relative">
+                  <ComposerPrimitive.Root className="px-2.5 py-3 border-t border-border bg-background flex flex-col gap-2 shrink-0 relative">
                     <ComposerQuotePreview />
                     <div className="border border-border/80 rounded-xl bg-background p-2 flex flex-col focus-within:ring-1 focus-within:ring-ring focus-within:border-ring shadow-sm transition-all duration-200">
                       <ComposerPrimitive.Input placeholder={shareContext ? "Nhập @ để hỏi về tab hiện tại" : placeholder} rows={1} disabled={isLoading} onPaste={onPaste} asChild>

@@ -16,7 +16,7 @@ interface AssistantMessageProps {
 
 export function AssistantMessage({ submitUserResponse }: AssistantMessageProps) {
   return (
-    <MessagePrimitive.Root className="relative flex flex-col w-full max-w-full rounded-2xl px-4 py-2.5 text-sm shadow-none mb-4 group bg-transparent text-foreground mr-auto">
+    <MessagePrimitive.Root className="relative flex flex-col w-full max-w-full rounded-2xl px-3 py-2 text-sm shadow-none mb-4 group bg-transparent text-foreground mr-auto">
       <div className="prose prose-sm dark:prose-invert break-words max-w-full leading-relaxed w-full">
         <MessagePrimitive.Content
           components={{

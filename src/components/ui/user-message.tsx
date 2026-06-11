@@ -17,7 +17,7 @@ interface UserMessageProps {
 export function UserMessage({ submitUserResponse }: UserMessageProps) {
   return (
     <MessagePrimitive.Root
-      className="flex flex-col w-fit max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-none mb-4 group bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto rounded-tr-sm border border-border/50"
+      className="flex flex-col w-fit max-w-[92%] rounded-2xl px-3 py-2 text-sm shadow-none mb-4 group bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 ml-auto rounded-tr-sm border border-border/50"
     >
       <div className="prose prose-sm dark:prose-invert break-words max-w-full leading-relaxed w-full">
         <MessagePrimitive.Quote>
