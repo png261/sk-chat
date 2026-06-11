@@ -1169,7 +1169,7 @@ export function useSkChatManager({
                       type: 'tool-call' as const,
                       toolCallId: tc.toolCallId,
                       toolName: tc.toolName,
-                      input: tc.args || {},
+                      args: tc.args || {},
                     })),
                   ],
                 });
@@ -1188,10 +1188,7 @@ export function useSkChatManager({
                           type: 'tool-result' as const,
                           toolCallId: tc.toolCallId,
                           toolName: tc.toolName,
-                          output: {
-                            type: 'text',
-                            value: outputValue,
-                          },
+                          result: outputValue,
                         },
                       ],
                     });
