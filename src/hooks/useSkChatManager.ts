@@ -181,6 +181,13 @@ export function useSkChatManager({
   const lastXRef = useRef<number>(0);
   const petRef = useRef<CodexPetHandle | null>(null);
 
+  const currentPetStateRef = useRef<string>('idle');
+  const setPetState = useCallback((state: string) => {
+    if (currentPetStateRef.current === state) return;
+    currentPetStateRef.current = state;
+    petRef.current?.setState(state as any);
+  }, []);
+
   // Sync coords reset during render when isOpen changes
   const prevIsOpenRef = useRef(isOpen);
   if (prevIsOpenRef.current !== isOpen) {
@@ -195,7 +202,7 @@ export function useSkChatManager({
     if (isDraggingActiveRef.current) return;
 
     if (error) {
-      petRef.current?.setState('failed');
+      setPetState('failed');
       prevIsLoadingRef.current = isLoading;
       return;
     }
@@ -209,11 +216,11 @@ export function useSkChatManager({
       petRef.current?.play('waving', { loops: 1, returnTo: 'idle' });
     } else {
       const targetState = getAgentPetState(messages, isLoading, error);
-      petRef.current?.setState(targetState);
+      setPetState(targetState);
     }
 
     prevIsLoadingRef.current = isLoading;
-  }, [isLoading, error, messages, guideCoords]);
+  }, [isLoading, error, messages, guideCoords, setPetState]);
 
   const getHomeCoords = useCallback(() => {
     if (typeof window === 'undefined') return { x: 0, y: 0 };
@@ -258,10 +265,10 @@ export function useSkChatManager({
           isMovingRight = guideCoords.x > window.innerWidth / 2;
         }
       }
-      petRef.current?.setState(isMovingRight ? 'running-right' : 'running-left');
+      setPetState(isMovingRight ? 'running-right' : 'running-left');
 
       const timer = setTimeout(() => {
-        petRef.current?.setState(
+        setPetState(
           guideCoords.success || guideCoords.isClicking ? 'idle' : 'waiting',
         );
       }, 800);
@@ -273,10 +280,10 @@ export function useSkChatManager({
       if (prev) {
         const home = coordsRef.current || getHomeCoords();
         const isMovingRight = home.x > prev.x;
-        petRef.current?.setState(isMovingRight ? 'running-right' : 'running-left');
+        setPetState(isMovingRight ? 'running-right' : 'running-left');
 
         const timer = setTimeout(() => {
-          petRef.current?.setState('idle');
+          setPetState('idle');
         }, 800);
 
         prevGuideCoordsRef.current = null;
@@ -284,7 +291,7 @@ export function useSkChatManager({
       }
       prevGuideCoordsRef.current = null;
     }
-  }, [guideCoords, getHomeCoords]);
+  }, [guideCoords, getHomeCoords, setPetState]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -301,13 +308,13 @@ export function useSkChatManager({
     };
     lastXRef.current = e.clientX;
 
-    petRef.current?.setState('idle');
+    setPetState('idle');
 
     e.currentTarget.classList.remove('cursor-grab');
     e.currentTarget.classList.add('cursor-grabbing');
 
     e.currentTarget.setPointerCapture(e.pointerId);
-  }, []);
+  }, [setPetState]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragStartRef.current || !isDraggingActiveRef.current) return;
@@ -339,14 +346,14 @@ export function useSkChatManager({
 
       const pointerDeltaX = e.clientX - lastXRef.current;
       if (pointerDeltaX > 2) {
-        petRef.current?.setState('running-right');
+        setPetState('running-right');
       } else if (pointerDeltaX < -2) {
-        petRef.current?.setState('running-left');
+        setPetState('running-left');
       }
 
       lastXRef.current = e.clientX;
     }
-  }, []);
+  }, [setPetState]);
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -359,9 +366,9 @@ export function useSkChatManager({
       e.currentTarget.classList.add('cursor-grab');
 
       const targetState = getAgentPetState(messages, isLoading, error);
-      petRef.current?.setState(targetState);
+      setPetState(targetState);
     },
-    [messages, isLoading, error],
+    [messages, isLoading, error, setPetState],
   );
 
   const handleMouseEnterPet = useCallback(() => {
