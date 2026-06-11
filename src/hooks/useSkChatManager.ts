@@ -647,15 +647,16 @@ export function useSkChatManager({
                       type: 'tool-call' as const,
                       toolCallId: tc.toolCallId,
                       toolName: tc.toolName,
-                      args: tc.args || {},
+                      args: tc.args || tc.input || {},
                     })),
                   ],
                 });
                 for (const rawTc of toolCalls) {
                   const tc = rawTc as any;
-                  if (tc.result !== undefined) {
+                  const tcResult = tc.result !== undefined ? tc.result : tc.output;
+                  if (tcResult !== undefined) {
                     let outputValue =
-                      typeof tc.result === 'string' ? tc.result : JSON.stringify(tc.result);
+                      typeof tcResult === 'string' ? tcResult : JSON.stringify(tcResult);
                     if (tc.toolName === 'screenshot') {
                       outputValue = 'Screenshot captured successfully.';
                     }
@@ -855,14 +856,17 @@ export function useSkChatManager({
                 type: 'tool-call' as const,
                 toolCallId: part.toolCallId,
                 toolName: part.toolName,
-                args: (part as any).args || {},
+                args: (part as any).args || (part as any).input || {},
                 result: undefined,
               });
             } else if (part.type === 'tool-result') {
               console.log('[SkChat] Stream tool-result resolved:', part);
               const tcIdx = accumulatedParts.findIndex((p) => p.toolCallId === part.toolCallId);
               if (tcIdx !== -1) {
-                accumulatedParts[tcIdx].result = (part as any).result;
+                accumulatedParts[tcIdx].result =
+                  (part as any).result !== undefined
+                    ? (part as any).result
+                    : (part as any).output;
               }
             }
 
