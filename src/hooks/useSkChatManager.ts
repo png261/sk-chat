@@ -562,6 +562,18 @@ export function useSkChatManager({
         let latestScreenshotUrl: string | null = null;
         for (let i = activeMessages.length - 1; i >= 0; i--) {
           const msg = activeMessages[i];
+          if (msg.attachments && msg.attachments.length > 0) {
+            const screenshotAttachment = msg.attachments.find(
+              (att) =>
+                (att.type === 'image/jpeg' || att.name?.startsWith('screenshot-')) &&
+                att.data &&
+                att.data.startsWith('data:image/'),
+            );
+            if (screenshotAttachment) {
+              latestScreenshotUrl = screenshotAttachment.data || null;
+              break;
+            }
+          }
           if (msg.parts && msg.parts.length > 0) {
             const toolCalls = msg.parts.filter((p) => p.type === 'tool-call');
             const screenshotCall = toolCalls.find(
@@ -765,7 +777,7 @@ export function useSkChatManager({
                           : item,
                       ),
                     );
-                    return screenshotUrl;
+                    return 'Screenshot captured successfully.';
                   }
                   return 'No screenshot captured.';
                 },

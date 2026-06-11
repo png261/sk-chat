@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useMessage } from '@assistant-ui/react';
 import { Button } from './ui/button';
 import { cn } from '../utils/utils';
 import type { SkChatMessage } from '../types';
@@ -30,20 +31,38 @@ export const convertMessage = (msg: SkChatMessage) => ({
         };
       })
     : [{ type: 'text' as const, text: msg.content }],
-  attachments: msg.role === 'user' ? msg.attachments?.map((att) => ({
+  attachments: msg.attachments?.map((att) => ({
     id: att.name,
     name: att.name,
     contentType: att.type,
     type: (att.type.startsWith('image/') ? 'image' : 'file') as 'image' | 'file',
     status: { type: 'complete' as const },
     content: [],
-  })) : undefined,
+    data: att.data,
+  })),
 });
 
 
 
 export function ScreenshotToolCall({ result }: { result: any }) {
   const isRunning = !result;
+  let message: any = null;
+  try {
+    message = useMessage();
+  } catch (e) {
+    // Ignore outside of Message context
+  }
+
+  const screenshotAttachment = message?.attachments?.find(
+    (att: any) =>
+      (att.contentType === 'image/jpeg' || att.name?.startsWith('screenshot-')) &&
+      att.data,
+  );
+
+  const imageUrl =
+    result && String(result).startsWith('data:image/')
+      ? result
+      : screenshotAttachment?.data;
 
   return (
     <div className="flex flex-col gap-2 mt-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-border/80 shadow-sm text-xs w-full">
@@ -77,10 +96,10 @@ export function ScreenshotToolCall({ result }: { result: any }) {
         {isRunning ? 'Đang chụp ảnh màn hình hiện tại...' : 'Đã chụp màn hình thành công'}
       </div>
 
-      {result && (
+      {imageUrl && (
         <div className="mt-2 rounded-lg overflow-hidden border border-border shadow-sm max-w-[280px]">
-          <a href={result} target="_blank" rel="noopener noreferrer" title="Click to view full image">
-            <img src={result} alt="Captured Screenshot" className="w-full h-auto object-cover max-h-[160px] hover:opacity-90 transition-opacity" />
+          <a href={imageUrl} target="_blank" rel="noopener noreferrer" title="Click to view full image">
+            <img src={imageUrl} alt="Captured Screenshot" className="w-full h-auto object-cover max-h-[160px] hover:opacity-90 transition-opacity" />
           </a>
         </div>
       )}
