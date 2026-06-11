@@ -5,7 +5,7 @@ import { StreamdownText } from './streamdown-text';
 import { ToolGroup } from './tool-group';
 import { ToolFallback } from './tool-fallback';
 import {
-  ComputerToolCall,
+  ScreenshotToolCall,
   GetWebContentToolCall,
   LoadSkillToolCall,
 } from '../ToolCalls';
@@ -36,8 +36,8 @@ export function UserMessage({ submitUserResponse }: UserMessageProps) {
                 return <StreamdownText {...part} />;
               case 'tool-call':
                 switch (part.toolName) {
-                  case 'computer':
-                    return <ComputerToolCall args={part.args} result={part.result} />;
+                  case 'screenshot':
+                    return <ScreenshotToolCall result={part.result} />;
                   case 'get_web_content':
                     return <GetWebContentToolCall args={part.args} result={part.result} />;
                   case 'load_skill':

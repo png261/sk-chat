@@ -407,8 +407,8 @@ export function getAgentSpeechText(
       switch (runningToolCall.toolName) {
         case 'get_web_content':
           return 'Đang đọc nội dung trang web...';
-        case 'computer':
-          return 'Đang tương tác với màn hình...';
+        case 'screenshot':
+          return 'Đang chụp ảnh màn hình...';
         case 'load_skill':
           return 'Đang kích hoạt kỹ năng...';
         default:
@@ -431,8 +431,8 @@ export function getAgentSpeechText(
         switch (lastPart.toolName) {
           case 'get_web_content':
             return 'Đang đọc nội dung trang web...';
-          case 'computer':
-            return 'Đang tương tác với màn hình...';
+          case 'screenshot':
+            return 'Đang chụp ảnh màn hình...';
           case 'load_skill':
             return 'Đang kích hoạt kỹ năng...';
           default:

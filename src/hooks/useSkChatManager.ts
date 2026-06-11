@@ -82,77 +82,6 @@ export function useSkChatManager({
   const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [canPortalControls, setCanPortalControls] = useState(false);
 
-  const [guideCoords, setGuideCoords] = useState<{
-    x: number;
-    y: number;
-    text: string;
-    isClicking?: boolean;
-    success?: boolean;
-  } | null>(null);
-
-  const [userMouse, setUserMouse] = useState<{
-    x: number;
-    y: number;
-    hoveredElement: string;
-  }>({ x: 0, y: 0, hoveredElement: 'none' });
-
-  const guideResolverRef = useRef<(() => void) | null>(null);
-  const guideSuccessRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    let throttleTimeout: any = null;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (throttleTimeout) return;
-      throttleTimeout = setTimeout(() => {
-        throttleTimeout = null;
-
-        const element = contentRef.current;
-        if (!element) return;
-
-        const rect = element.getBoundingClientRect();
-        const relativeX = e.clientX - rect.left;
-        const relativeY = e.clientY - rect.top;
-
-        const elemWidth = Math.max(Math.ceil(rect.width), element.clientWidth, 1);
-        const elemHeight = Math.max(Math.ceil(rect.height), element.clientHeight, 1);
-        const maxElemDim = Math.max(elemWidth, elemHeight);
-        const scale = maxElemDim > 1024 ? 1024 / maxElemDim : 1;
-
-        const scaledX = Math.round(relativeX * scale);
-        const scaledY = Math.round(relativeY * scale);
-
-        const hoveredEl = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-        let hoveredStr = 'none';
-        if (hoveredEl) {
-          const tagName = hoveredEl.tagName.toLowerCase();
-          const idStr = hoveredEl.id ? `#${hoveredEl.id}` : '';
-          const classStr =
-            hoveredEl.className && typeof hoveredEl.className === 'string'
-              ? `.${hoveredEl.className.trim().split(/\s+/).join('.')}`
-              : '';
-          const textSnippet = hoveredEl.textContent?.trim().slice(0, 50) || '';
-          const textStr = textSnippet ? ` "${textSnippet}"` : '';
-          hoveredStr = `<${tagName}${idStr}${classStr}>${textStr}`;
-        }
-
-        setUserMouse({
-          x: scaledX,
-          y: scaledY,
-          hoveredElement: hoveredStr,
-        });
-      }, 100);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (throttleTimeout) clearTimeout(throttleTimeout);
-    };
-  }, []);
-
   const stopMessage = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -161,9 +90,6 @@ export function useSkChatManager({
     if (askUserResolverRef.current) {
       askUserResolverRef.current.resolve('User cancelled or stopped the message.');
       askUserResolverRef.current = null;
-    }
-    if (guideResolverRef.current) {
-      guideResolverRef.current();
     }
   }, []);
 
@@ -207,8 +133,6 @@ export function useSkChatManager({
       return;
     }
 
-    if (guideCoords) return;
-
     if (isLoading && !prevIsLoadingRef.current) {
       const targetState = getAgentPetState(messages, true, null);
       petRef.current?.play('jumping', { loops: 1, returnTo: targetState });
@@ -220,7 +144,7 @@ export function useSkChatManager({
     }
 
     prevIsLoadingRef.current = isLoading;
-  }, [isLoading, error, messages, guideCoords, setPetState]);
+  }, [isLoading, error, messages, setPetState]);
 
   const getHomeCoords = useCallback(() => {
     if (typeof window === 'undefined') return { x: 0, y: 0 };
@@ -248,50 +172,7 @@ export function useSkChatManager({
     return { x: left, y: top };
   }, [isOpen, position]);
 
-  const prevGuideCoordsRef = useRef<{ x: number; y: number } | null>(null);
 
-  useEffect(() => {
-    if (guideCoords) {
-      const prev = prevGuideCoordsRef.current;
-      let isMovingRight = true;
-      if (prev) {
-        isMovingRight = guideCoords.x > prev.x;
-      } else {
-        const petEl = document.querySelector('[aria-label="Virtual Pet"]')?.parentElement;
-        if (petEl) {
-          const rect = petEl.getBoundingClientRect();
-          isMovingRight = guideCoords.x > rect.left;
-        } else {
-          isMovingRight = guideCoords.x > window.innerWidth / 2;
-        }
-      }
-      setPetState(isMovingRight ? 'running-right' : 'running-left');
-
-      const timer = setTimeout(() => {
-        setPetState(
-          guideCoords.success || guideCoords.isClicking ? 'idle' : 'waiting',
-        );
-      }, 800);
-
-      prevGuideCoordsRef.current = { x: guideCoords.x, y: guideCoords.y };
-      return () => clearTimeout(timer);
-    } else {
-      const prev = prevGuideCoordsRef.current;
-      if (prev) {
-        const home = coordsRef.current || getHomeCoords();
-        const isMovingRight = home.x > prev.x;
-        setPetState(isMovingRight ? 'running-right' : 'running-left');
-
-        const timer = setTimeout(() => {
-          setPetState('idle');
-        }, 800);
-
-        prevGuideCoordsRef.current = null;
-        return () => clearTimeout(timer);
-      }
-      prevGuideCoordsRef.current = null;
-    }
-  }, [guideCoords, getHomeCoords, setPetState]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
@@ -370,405 +251,6 @@ export function useSkChatManager({
     },
     [messages, isLoading, error, setPetState],
   );
-
-  const handleMouseEnterPet = useCallback(() => {
-    if (guideCoords && guideSuccessRef.current) {
-      guideSuccessRef.current();
-    }
-  }, [guideCoords]);
-
-  const showGuide = useCallback(
-    async (x: number, y: number, text: string, type: 'pointer' | 'text') => {
-      const element = contentRef.current;
-      if (!element) return;
-      const rect = element.getBoundingClientRect();
-
-      const elemWidth = Math.max(Math.ceil(rect.width), element.clientWidth, 1);
-      const elemHeight = Math.max(Math.ceil(rect.height), element.clientHeight, 1);
-      const maxElemDim = Math.max(elemWidth, elemHeight);
-
-      const scale = maxElemDim > 1024 ? 1024 / maxElemDim : 1;
-
-      const actualX = x / scale;
-      const actualY = y / scale;
-
-      const pageX = rect.left + window.scrollX + actualX;
-      const pageY = rect.top + window.scrollY + actualY;
-
-      window.scrollTo({
-        top: Math.max(0, pageY - window.innerHeight / 2),
-        left: Math.max(0, pageX - window.innerWidth / 2),
-        behavior: 'smooth',
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const freshRect = element.getBoundingClientRect();
-      const freshClientX = freshRect.left + actualX;
-      const freshClientY = freshRect.top + actualY;
-
-      setGuideCoords({ x: freshClientX, y: freshClientY, text, success: false });
-
-      if (guideResolverRef.current) {
-        guideResolverRef.current();
-      }
-
-      return new Promise<void>((resolve) => {
-        let resolved = false;
-
-        const resolveGuide = () => {
-          if (resolved) return;
-          resolved = true;
-
-          setGuideCoords(null);
-          guideResolverRef.current = null;
-          guideSuccessRef.current = null;
-          resolve();
-        };
-
-        const triggerSuccess = () => {
-          if (resolved) return;
-          resolved = true;
-
-          setGuideCoords((current) =>
-            current ? { ...current, success: true } : null,
-          );
-
-          setTimeout(() => {
-            setGuideCoords(null);
-            guideResolverRef.current = null;
-            guideSuccessRef.current = null;
-            resolve();
-          }, 500);
-        };
-
-        guideResolverRef.current = resolveGuide;
-        guideSuccessRef.current = triggerSuccess;
-      });
-    },
-    [],
-  );
-
-  const findInteractiveElement = useCallback(
-    (clientX: number, clientY: number, radius = 25): HTMLElement | null => {
-      const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
-      if (el) {
-        const interactiveAncestor = el.closest(
-          'button, a, input, textarea, select, [role="button"], [contenteditable="true"]',
-        ) as HTMLElement | null;
-        if (interactiveAncestor) return interactiveAncestor;
-
-        const style = window.getComputedStyle(el);
-        if (style.cursor === 'pointer') return el;
-      }
-
-      let closestEl: HTMLElement | null = null;
-      let minDistance = Infinity;
-
-      for (let dx = -radius; dx <= radius; dx += 5) {
-        for (let dy = -radius; dy <= radius; dy += 5) {
-          const x = clientX + dx;
-          const y = clientY + dy;
-          const target = document.elementFromPoint(x, y) as HTMLElement | null;
-          if (!target) continue;
-
-          const interactive = target.closest(
-            'button, a, input, textarea, select, [role="button"], [contenteditable="true"]',
-          ) as HTMLElement | null;
-          if (interactive) {
-            const rect = interactive.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            const dist = Math.sqrt(
-              Math.pow(centerX - clientX, 2) + Math.pow(centerY - clientY, 2),
-            );
-            if (dist < minDistance) {
-              minDistance = dist;
-              closestEl = interactive;
-            }
-          } else {
-            const style = window.getComputedStyle(target);
-            if (style.cursor === 'pointer') {
-              const rect = target.getBoundingClientRect();
-              const centerX = rect.left + rect.width / 2;
-              const centerY = rect.top + rect.height / 2;
-              const dist = Math.sqrt(
-                Math.pow(centerX - clientX, 2) + Math.pow(centerY - clientY, 2),
-              );
-              if (dist < minDistance) {
-                minDistance = dist;
-                closestEl = target;
-              }
-            }
-          }
-        }
-      }
-
-      return closestEl || el;
-    },
-    [],
-  );
-
-  const moveAndInteract = useCallback(
-    async (
-      action:
-        | 'mouse_move'
-        | 'left_click'
-        | 'right_click'
-        | 'double_click'
-        | 'type',
-      coordinate?: number[],
-      text?: string,
-    ) => {
-      if (!coordinate || !Array.isArray(coordinate) || coordinate.length < 2) {
-        return 'Missing coordinates.';
-      }
-      const [x, y] = coordinate;
-      const element = contentRef.current;
-      if (!element) return 'Container element not found.';
-
-      const rect = element.getBoundingClientRect();
-      const elemWidth = Math.max(Math.ceil(rect.width), element.clientWidth, 1);
-      const elemHeight = Math.max(Math.ceil(rect.height), element.clientHeight, 1);
-      const maxElemDim = Math.max(elemWidth, elemHeight);
-
-      const scale = maxElemDim > 1024 ? 1024 / maxElemDim : 1;
-
-      const actualX = x / scale;
-      const actualY = y / scale;
-
-      const pageX = rect.left + window.scrollX + actualX;
-      const pageY = rect.top + window.scrollY + actualY;
-
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const clientX = rect.left + actualX;
-      const clientY = rect.top + actualY;
-
-      const isVisible =
-        clientX >= 0 &&
-        clientX <= viewportWidth &&
-        clientY >= 0 &&
-        clientY <= viewportHeight;
-      if (!isVisible) {
-        window.scrollTo({
-          top: Math.max(0, pageY - viewportHeight / 2),
-          left: Math.max(0, pageX - viewportWidth / 2),
-          behavior: 'smooth',
-        });
-        await new Promise((resolve) => setTimeout(resolve, 600));
-      }
-
-      const freshRect = element.getBoundingClientRect();
-      const freshClientX = freshRect.left + actualX;
-      const freshClientY = freshRect.top + actualY;
-
-      const targetElement = findInteractiveElement(freshClientX, freshClientY);
-      if (!targetElement) {
-        return `Mouse moved to coordinates (${x}, ${y}), but no DOM element was found at that position.`;
-      }
-
-      const targetRect = targetElement.getBoundingClientRect();
-      const targetClientX = targetRect.left + targetRect.width / 2;
-      const targetClientY = targetRect.top + targetRect.height / 2;
-
-      const descText =
-        action === 'left_click' || action === 'double_click'
-          ? 'Đang click tại đây...'
-          : action === 'type'
-            ? `Đang nhập "${text}" tại đây...`
-            : 'Đang di chuyển tới đây...';
-
-      setGuideCoords({
-        x: targetClientX,
-        y: targetClientY,
-        text: descText,
-        isClicking: false,
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      if (action === 'mouse_move') {
-        await new Promise<void>((resolve) => {
-          let resolved = false;
-
-          const resolveGuide = () => {
-            if (resolved) return;
-            resolved = true;
-
-            setGuideCoords(null);
-            guideResolverRef.current = null;
-            guideSuccessRef.current = null;
-            resolve();
-          };
-
-          const triggerSuccess = () => {
-            if (resolved) return;
-            resolved = true;
-
-            setGuideCoords((current) =>
-              current ? { ...current, success: true } : null,
-            );
-
-            setTimeout(() => {
-              setGuideCoords(null);
-              guideResolverRef.current = null;
-              guideSuccessRef.current = null;
-              resolve();
-            }, 500);
-          };
-
-          guideResolverRef.current = resolveGuide;
-          guideSuccessRef.current = triggerSuccess;
-        });
-
-        return `Mouse moved to element <${targetElement.tagName.toLowerCase()}> at coordinates (${x}, ${y}) and user hovered to confirm.`;
-      }
-
-      setGuideCoords((current) =>
-        current ? { ...current, isClicking: true } : null,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      if (
-        action === 'left_click' ||
-        action === 'right_click' ||
-        action === 'double_click'
-      ) {
-        targetElement.focus?.();
-
-        const mousedown = new MouseEvent('mousedown', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          buttons: 1,
-        });
-        const mouseup = new MouseEvent('mouseup', {
-          bubbles: true,
-          cancelable: true,
-          view: window,
-          buttons: 1,
-        });
-        targetElement.dispatchEvent(mousedown);
-        targetElement.dispatchEvent(mouseup);
-
-        if (action === 'left_click') {
-          const clickEvent = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          targetElement.dispatchEvent(clickEvent);
-          if (
-            targetElement instanceof HTMLButtonElement ||
-            targetElement instanceof HTMLAnchorElement ||
-            targetElement.tagName === 'BUTTON' ||
-            targetElement.tagName === 'A'
-          ) {
-            targetElement.click?.();
-          }
-        } else if (action === 'double_click') {
-          const clickEvent1 = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          const clickEvent2 = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          const dblclick = new MouseEvent('dblclick', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          targetElement.dispatchEvent(clickEvent1);
-          targetElement.dispatchEvent(clickEvent2);
-          targetElement.dispatchEvent(dblclick);
-        } else if (action === 'right_click') {
-          const contextmenu = new MouseEvent('contextmenu', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-          });
-          targetElement.dispatchEvent(contextmenu);
-        }
-
-        setGuideCoords((current) =>
-          current ? { ...current, isClicking: false } : null,
-        );
-        return `Clicked element <${targetElement.tagName.toLowerCase()}> at coordinates (${x}, ${y}).`;
-      }
-
-      if (action === 'type') {
-        targetElement.focus?.();
-
-        const inputElement =
-          targetElement instanceof HTMLInputElement ||
-          targetElement instanceof HTMLTextAreaElement
-            ? targetElement
-            : (targetElement.querySelector('input, textarea') ||
-              targetElement.closest('input, textarea')) as
-                | HTMLInputElement
-                | HTMLTextAreaElement
-                | null;
-
-        if (inputElement) {
-          inputElement.focus();
-          inputElement.value = text || '';
-          inputElement.dispatchEvent(new Event('input', { bubbles: true }));
-          inputElement.dispatchEvent(new Event('change', { bubbles: true }));
-          setGuideCoords((current) =>
-            current ? { ...current, isClicking: false } : null,
-          );
-          return `Typed text "${text}" into element <${inputElement.tagName.toLowerCase()}> at coordinates (${x}, ${y}).`;
-        } else {
-          if (targetElement.isContentEditable) {
-            targetElement.textContent = text || '';
-            targetElement.dispatchEvent(new Event('input', { bubbles: true }));
-            setGuideCoords((current) =>
-              current ? { ...current, isClicking: false } : null,
-            );
-            return `Typed text "${text}" into contenteditable element at coordinates (${x}, ${y}).`;
-          }
-          setGuideCoords((current) =>
-            current ? { ...current, isClicking: false } : null,
-          );
-          return `Focused element <${targetElement.tagName.toLowerCase()}> at coordinates (${x}, ${y}), but it is not a text input.`;
-        }
-      }
-
-      setGuideCoords((current) =>
-        current ? { ...current, isClicking: false } : null,
-      );
-      return 'Action completed.';
-    },
-    [findInteractiveElement],
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    (window as any).__sk_chat_guide__ = {
-      showPointer: async (x: number, y: number, text: string) => {
-        await showGuide(x, y, text, 'pointer');
-      },
-      showTextGuide: async (x: number, y: number, text: string) => {
-        await showGuide(x, y, text, 'text');
-      },
-      clear: () => {
-        if (guideResolverRef.current) {
-          guideResolverRef.current();
-        } else {
-          setGuideCoords(null);
-        }
-      },
-    };
-    return () => {
-      delete (window as any).__sk_chat_guide__;
-    };
-  }, [showGuide]);
 
   const normalizedMemory = useMemo(
     () => normalizeMemory(memory, enableMemory),
@@ -1084,8 +566,7 @@ export function useSkChatManager({
             const toolCalls = msg.parts.filter((p) => p.type === 'tool-call');
             const screenshotCall = toolCalls.find(
               (tc) =>
-                tc.toolName === 'computer' &&
-                tc.args?.action === 'screenshot' &&
+                tc.toolName === 'screenshot' &&
                 tc.result &&
                 tc.result.startsWith('data:image/'),
             );
@@ -1112,9 +593,6 @@ export function useSkChatManager({
           `Thông tin ngữ cảnh người dùng:
 - Tên người dùng: ${metadata?.userName || 'Người dùng'}
 - Hành động hiện tại của người dùng: ${metadata?.userAction || metadata?.currentAction || metadata?.activity || metadata?.action || 'Đang xem trang bài học'}`,
-          `Trạng thái con trỏ chuột & Thành phần hover của người dùng:
-- Tọa độ con trỏ: x=${userMouse.x}, y=${userMouse.y} (tỷ lệ tương đối trên lưới ảnh chụp màn hình 1024px).
-- Thành phần đang hover: ${userMouse.hoveredElement || 'Không có'}`,
         ]
           .filter(Boolean)
           .join('\n\n');
@@ -1178,7 +656,7 @@ export function useSkChatManager({
                   if (tc.result !== undefined) {
                     let outputValue =
                       typeof tc.result === 'string' ? tc.result : JSON.stringify(tc.result);
-                    if (tc.toolName === 'computer' && tc.args?.action === 'screenshot') {
+                    if (tc.toolName === 'screenshot') {
                       outputValue = 'Screenshot captured successfully.';
                     }
                     sdkMessages.push({
@@ -1263,81 +741,32 @@ export function useSkChatManager({
               );
             },
             tools: {
-              computer: {
-                description:
-                  'Interact with the screen by taking screenshots, clicking coordinates, typing text, or guiding the user.',
-                parameters: z.object({
-                  action: z.enum([
-                    'screenshot',
-                    'mouse_move',
-                    'left_click',
-                    'right_click',
-                    'double_click',
-                    'left_mouse_down',
-                    'left_mouse_up',
-                    'type',
-                    'key',
-                    'cursor_position',
-                  ]),
-                  coordinate: z.array(z.number()).optional(),
-                  text: z.string().optional(),
-                }),
-                execute: async (
-                  args: {
-                    action:
-                      | 'screenshot'
-                      | 'mouse_move'
-                      | 'left_click'
-                      | 'right_click'
-                      | 'double_click'
-                      | 'left_mouse_down'
-                      | 'left_mouse_up'
-                      | 'type'
-                      | 'key'
-                      | 'cursor_position';
-                    coordinate?: number[];
-                    text?: string;
-                  },
-                  { toolCallId }: { toolCallId: string }
-                ) => {
-                  const action = args.action;
-                  const coordinate = args.coordinate;
-                  const text = args.text;
-
-                  if (action === 'screenshot') {
-                    const element = contentRef.current;
-                    const screenshotUrl = element ? await captureElement(element) : null;
-                    if (screenshotUrl) {
-                      const attachment: SkChatAttachment = {
-                        name: `screenshot-${Date.now()}.jpg`,
-                        type: 'image/jpeg',
-                        size: 0,
-                        data: screenshotUrl,
-                      };
-                      setMessages((current) =>
-                        current.map((item) =>
-                          item.id === assistantId
-                            ? {
-                                ...item,
-                                attachments: [...(item.attachments || []), attachment],
-                              }
-                            : item,
-                        ),
-                      );
-                      return screenshotUrl;
-                    }
-                    return 'No screenshot captured.';
-                  } else if (action === 'cursor_position') {
-                    return `User cursor position: x=${userMouse.x}, y=${userMouse.y}. Hovered element: ${userMouse.hoveredElement}`;
-                  } else if (
-                    ['mouse_move', 'left_click', 'right_click', 'double_click', 'type'].includes(
-                      action as any,
-                    )
-                  ) {
-                    const result = await moveAndInteract(action as any, coordinate, text);
-                    return result;
+              screenshot: {
+                description: 'Take a screenshot of the current website content region to capture visual state.',
+                parameters: z.object({}),
+                execute: async () => {
+                  const element = contentRef.current;
+                  const screenshotUrl = element ? await captureElement(element) : null;
+                  if (screenshotUrl) {
+                    const attachment: SkChatAttachment = {
+                      name: `screenshot-${Date.now()}.jpg`,
+                      type: 'image/jpeg',
+                      size: 0,
+                      data: screenshotUrl,
+                    };
+                    setMessages((current) =>
+                      current.map((item) =>
+                        item.id === assistantId
+                          ? {
+                              ...item,
+                              attachments: [...(item.attachments || []), attachment],
+                            }
+                          : item,
+                      ),
+                    );
+                    return screenshotUrl;
                   }
-                  return `Action ${action} is not supported.`;
+                  return 'No screenshot captured.';
                 },
               } as any,
               get_web_content: {
@@ -1454,10 +883,6 @@ export function useSkChatManager({
               ),
             );
           }
-
-          setTimeout(() => {
-            setGuideCoords(null);
-          }, 2000);
         } else {
           const response = await fetch(apiEndpoint, {
             signal: controller.signal,
@@ -1565,8 +990,6 @@ export function useSkChatManager({
       skills,
       systemPrompt,
       contentData,
-      userMouse,
-      moveAndInteract,
       customTools,
       contextSnapshot,
       apiKey,
@@ -1754,11 +1177,8 @@ export function useSkChatManager({
   } as CSSProperties;
 
   const speechText = useMemo(() => {
-    if (guideCoords) {
-      return guideCoords.text;
-    }
     return getAgentSpeechText(messages, isLoading);
-  }, [messages, isLoading, guideCoords]);
+  }, [messages, isLoading]);
 
   const showSpeechBubble = speechText.trim().length > 0;
 
@@ -1776,29 +1196,6 @@ export function useSkChatManager({
     }
 
     const transition = 'all 800ms ease-in-out';
-
-    if (guideCoords) {
-      const petWidth = 96;
-      const petHeight = 104;
-
-      let left =
-        guideCoords.x < window.innerWidth / 2
-          ? guideCoords.x + 30
-          : guideCoords.x - petWidth - 30;
-
-      let top = guideCoords.y - petHeight / 2;
-      top = Math.min(Math.max(10, top), window.innerHeight - petHeight - 10);
-      left = Math.min(Math.max(10, left), window.innerWidth - petWidth - 10);
-
-      return {
-        position: 'fixed',
-        left: `${left}px`,
-        top: `${top}px`,
-        bottom: 'auto',
-        right: 'auto',
-        transition,
-      };
-    }
 
     if (coordsRef.current) {
       return {
@@ -1820,7 +1217,7 @@ export function useSkChatManager({
       right: 'auto',
       transition,
     };
-  }, [canPortalControls, isOpen, position, guideCoords, getHomeCoords]);
+  }, [canPortalControls, isOpen, position, getHomeCoords]);
 
   return {
     contentRef,
@@ -1829,7 +1226,6 @@ export function useSkChatManager({
     isDraggingRef,
     isOpen,
     setIsOpen,
-    guideCoords,
     canPortalControls,
     value,
     style,
@@ -1839,6 +1235,5 @@ export function useSkChatManager({
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
-    handleMouseEnterPet,
   };
 }

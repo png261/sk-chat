@@ -5,7 +5,7 @@ import { ChainOfThought } from './chain-of-thought';
 import { ToolFallback } from './tool-fallback';
 import { Sources } from './sources';
 import {
-  ComputerToolCall,
+  ScreenshotToolCall,
   GetWebContentToolCall,
   LoadSkillToolCall,
 } from '../ToolCalls';
@@ -27,8 +27,8 @@ export function AssistantMessage({ submitUserResponse }: AssistantMessageProps) 
             ),
             tools: {
               by_name: {
-                computer: ({ args, result }) => (
-                  <ComputerToolCall args={args} result={result} />
+                screenshot: ({ result }) => (
+                  <ScreenshotToolCall result={result} />
                 ),
                 get_web_content: ({ args, result }) => (
                   <GetWebContentToolCall args={args} result={result} />

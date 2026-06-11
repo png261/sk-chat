@@ -26,7 +26,6 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
     isDraggingRef,
     isOpen,
     setIsOpen,
-    guideCoords,
     canPortalControls,
     value,
     style,
@@ -36,7 +35,6 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
-    handleMouseEnterPet,
   } = useSkChatManager(props);
 
   const controls = (
@@ -50,7 +48,6 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onMouseEnter={handleMouseEnterPet}
         onClick={(e) => {
           if (isDraggingRef.current) {
             e.preventDefault();
@@ -68,7 +65,7 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
             setIsOpen(true);
           }
         }}
-        title={isOpen ? "Đóng cuộc trò chuyện" : "Trò chuyện với AI"}
+        title={isOpen ? "Đóng cuộc trò chuyện" : "Trò chuyện with AI"}
       >
         {showSpeechBubble && (
           <div
@@ -87,7 +84,7 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
               setIsOpen(true);
             }}
           >
-            <div className={cn("leading-relaxed font-medium text-xs", !guideCoords && "line-clamp-3")}>
+            <div className="leading-relaxed font-medium text-xs line-clamp-3">
               {speechText}
             </div>
             {/* Arrow */}
@@ -99,22 +96,6 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
         )}
         <CodexPet ref={petRef} id="assistant" aria-label="Virtual Pet" />
       </div>
-    </div>
-  );
-
-  const targetIndicator = guideCoords && (
-    <div
-      className="fixed pointer-events-none z-[2147483645] -translate-x-1/2 -translate-y-1/2"
-      style={{ left: guideCoords.x, top: guideCoords.y }}
-    >
-      <span className={cn(
-        "absolute -translate-x-1/2 -translate-y-1/2 inline-flex h-8 w-8 rounded-full opacity-75 animate-ping transition-colors duration-300",
-        (guideCoords.success || guideCoords.isClicking) ? "bg-green-400" : "bg-blue-400"
-      )} />
-      <span className={cn(
-        "absolute -translate-x-1/2 -translate-y-1/2 inline-flex rounded-full h-3 w-3 shadow-md border border-white transition-colors duration-300",
-        (guideCoords.success || guideCoords.isClicking) ? "bg-green-500" : "bg-blue-500"
-      )} />
     </div>
   );
 
@@ -144,7 +125,6 @@ export function SkChatProvider(props: PropsWithChildren<SkChatProviderProps>) {
             debug={debug}
           />
           {canPortalControls ? createPortal(controls, document.body) : controls}
-          {targetIndicator && (canPortalControls ? createPortal(targetIndicator, document.body) : targetIndicator)}
         </div>
       </SkChatContext.Provider>
     </CodexPetProvider>

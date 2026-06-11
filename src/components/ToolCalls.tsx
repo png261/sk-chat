@@ -42,33 +42,14 @@ export const convertMessage = (msg: SkChatMessage) => ({
 
 
 
-export function ComputerToolCall({ args, result }: { args: any; result: any }) {
-  const action = args?.action;
+export function ScreenshotToolCall({ result }: { result: any }) {
   const isRunning = !result;
-
-  let label = '⚙️ Công cụ hệ thống';
-  let detail = '';
-  if (action === 'screenshot') {
-    label = '📸 Chụp ảnh màn hình';
-    detail = isRunning ? 'Đang chụp ảnh màn hình hiện tại...' : 'Đã chụp màn hình thành công';
-  } else if (action === 'mouse_move') {
-    label = '🖱️ Di chuyển con trỏ';
-    const coords = args?.coordinate ? `(${args.coordinate.join(', ')})` : '';
-    detail = isRunning ? `Đang di chuyển con trỏ tới tọa độ ${coords}...` : `Đã di chuyển con trỏ tới tọa độ ${coords}`;
-  } else if (action === 'left_click') {
-    label = '🖱️ Nhấp chuột';
-    const coords = args?.coordinate ? `(${args.coordinate.join(', ')})` : '';
-    detail = isRunning ? `Đang nhấp chuột tại tọa độ ${coords}...` : `Đã nhấp chuột tại tọa độ ${coords}`;
-  } else if (action === 'type') {
-    label = '⌨️ Nhập liệu';
-    detail = isRunning ? `Đang hướng dẫn nhập: "${args?.text}"...` : `Đã hướng dẫn nhập: "${args?.text}"`;
-  }
 
   return (
     <div className="flex flex-col gap-2 mt-2 p-3 rounded-xl bg-white dark:bg-slate-900 border border-border/80 shadow-sm text-xs w-full">
       <div className="flex items-center justify-between">
         <span className="font-medium text-foreground flex items-center gap-1.5">
-          {label}
+          📸 Chụp ảnh màn hình
         </span>
         <span
           className={cn(
@@ -93,10 +74,10 @@ export function ComputerToolCall({ args, result }: { args: any; result: any }) {
       </div>
       
       <div className="text-muted-foreground text-[11px] leading-relaxed">
-        {detail}
+        {isRunning ? 'Đang chụp ảnh màn hình hiện tại...' : 'Đã chụp màn hình thành công'}
       </div>
 
-      {action === 'screenshot' && result && (
+      {result && (
         <div className="mt-2 rounded-lg overflow-hidden border border-border shadow-sm max-w-[280px]">
           <a href={result} target="_blank" rel="noopener noreferrer" title="Click to view full image">
             <img src={result} alt="Captured Screenshot" className="w-full h-auto object-cover max-h-[160px] hover:opacity-90 transition-opacity" />

@@ -146,43 +146,16 @@ export function createSkChatTools() {
         return `${titlePart}${urlPart}\n${markdownPart}${contentDataPart}`;
       },
     }),
-    computer: tool<{
-      action: 'screenshot' | 'mouse_move' | 'left_click' | 'right_click' | 'double_click' | 'left_mouse_down' | 'left_mouse_up' | 'type' | 'key' | 'cursor_position';
-      coordinate?: [number, number];
-      text?: string;
-    }, string>({
-      description: 'Interact with the screen by taking screenshots, clicking coordinates, typing text, or guiding the user.',
-      inputSchema: jsonSchema<{
-        action: 'screenshot' | 'mouse_move' | 'left_click' | 'right_click' | 'double_click' | 'left_mouse_down' | 'left_mouse_up' | 'type' | 'key' | 'cursor_position';
-        coordinate?: [number, number];
-        text?: string;
-      }>({
+    screenshot: tool<EmptyInput, string>({
+      description: 'Take a screenshot of the current website content region to capture visual state.',
+      inputSchema: jsonSchema<EmptyInput>({
         type: 'object',
-        properties: {
-          action: {
-            type: 'string',
-            enum: ['screenshot', 'mouse_move', 'left_click', 'right_click', 'double_click', 'left_mouse_down', 'left_mouse_up', 'type', 'key', 'cursor_position'],
-            description: 'The action to perform.',
-          },
-          coordinate: {
-            type: 'array',
-            items: { type: 'number' },
-            description: 'The [x, y] coordinates relative to the captured screenshot (0 to width/height of the image).',
-          },
-          text: {
-            type: 'string',
-            description: 'The text to type or the instruction/key combination.',
-          },
-        },
-        required: ['action'],
+        properties: {},
         additionalProperties: false,
       }),
-      execute: async ({ action, coordinate, text }, options) => {
+      execute: async (_input, options) => {
         const { request } = getAgentContext(options.experimental_context);
-        if (action === 'screenshot') {
-          return request.context.screenshot || 'No screenshot captured.';
-        }
-        return `Action ${action} executed at ${coordinate ? `[${coordinate.join(', ')}]` : 'N/A'}.`;
+        return request.context.screenshot || 'No screenshot captured.';
       },
     }),
   };
