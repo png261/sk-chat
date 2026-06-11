@@ -1,0 +1,80 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "streamdown/styles.css";
+@import "@fontsource-variable/geist";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Unified sk-chat and shadcn variables as valid CSS colors */
+    --sk-chat-bg: hsl(0 0% 100%);
+    --sk-chat-fg: hsl(222.2 84% 4.9%);
+    --sk-chat-card: hsl(0 0% 100%);
+    --sk-chat-card-fg: hsl(222.2 84% 4.9%);
+    --sk-chat-popover: hsl(0 0% 100%);
+    --sk-chat-popover-fg: hsl(222.2 84% 4.9%);
+    --sk-chat-primary: hsl(221.2 83.2% 53.3%);
+    --sk-chat-primary-fg: hsl(210 40% 98%);
+    --sk-chat-secondary: hsl(210 40% 96.1%);
+    --sk-chat-secondary-fg: hsl(222.2 47.4% 11.2%);
+    --sk-chat-muted: hsl(210 40% 96.1%);
+    --sk-chat-muted-fg: hsl(215.4 16.3% 46.9%);
+    --sk-chat-accent: hsl(210 40% 96.1%);
+    --sk-chat-accent-fg: hsl(222.2 47.4% 11.2%);
+    --sk-chat-destructive: hsl(0 84.2% 60.2%);
+    --sk-chat-destructive-fg: hsl(210 40% 98%);
+    --sk-chat-border: hsl(214.3 31.8% 91.4%);
+    --sk-chat-input: hsl(214.3 31.8% 91.4%);
+    --sk-chat-ring: hsl(221.2 83.2% 53.3%);
+    --sk-chat-radius: 0.5rem;
+
+    --background: var(--sk-chat-bg);
+    --foreground: var(--sk-chat-fg);
+    --card: var(--sk-chat-card);
+    --card-foreground: var(--sk-chat-card-fg);
+    --popover: var(--sk-chat-popover);
+    --popover-foreground: var(--sk-chat-popover-fg);
+    --primary: var(--sk-chat-primary);
+    --primary-foreground: var(--sk-chat-primary-fg);
+    --secondary: var(--sk-chat-secondary);
+    --secondary-foreground: var(--sk-chat-secondary-fg);
+    --muted: var(--sk-chat-muted);
+    --muted-foreground: var(--sk-chat-muted-fg);
+    --accent: var(--sk-chat-accent);
+    --accent-foreground: var(--sk-chat-accent-fg);
+    --destructive: var(--sk-chat-destructive);
+    --destructive-foreground: var(--sk-chat-destructive-fg);
+    --border: var(--sk-chat-border);
+    --input: var(--sk-chat-input);
+    --ring: var(--sk-chat-ring);
+    --radius: var(--sk-chat-radius);
+  }
+
+  .dark {
+    --sk-chat-bg: hsl(222.2 84% 4.9%);
+    --sk-chat-fg: hsl(210 40% 98%);
+    --sk-chat-card: hsl(222.2 84% 4.9%);
+    --sk-chat-card-fg: hsl(210 40% 98%);
+    --sk-chat-popover: hsl(222.2 84% 4.9%);
+    --sk-chat-popover-fg: hsl(210 40% 98%);
+    --sk-chat-primary: hsl(217.2 91.2% 59.8%);
+    --sk-chat-primary-fg: hsl(222.2 47.4% 11.2%);
+    --sk-chat-secondary: hsl(217.2 32.6% 17.5%);
+    --sk-chat-secondary-fg: hsl(210 40% 98%);
+    --sk-chat-muted: hsl(217.2 32.6% 17.5%);
+    --sk-chat-muted-fg: hsl(215 20.2% 65.1%);
+    --sk-chat-accent: hsl(217.2 32.6% 17.5%);
+    --sk-chat-accent-fg: hsl(210 40% 98%);
+    --sk-chat-destructive: hsl(0 62.8% 30.6%);
+    --sk-chat-destructive-fg: hsl(210 40% 98%);
+    --sk-chat-border: hsl(217.2 32.6% 17.5%);
+    --sk-chat-input: hsl(217.2 32.6% 17.5%);
+    --sk-chat-ring: hsl(224.3 76.3% 48%);
+  }
+
+  * {
+    @apply border-border;
+  }
+}
