@@ -18,11 +18,6 @@ import type {
 
 type EmptyInput = Record<string, never>;
 
-type AskUserInput = {
-  question: string;
-  options: string[];
-};
-
 type LoadSkillInput = {
   name: string;
 };
@@ -189,32 +184,6 @@ export function createSkChatTools() {
         }
         return `Action ${action} executed at ${coordinate ? `[${coordinate.join(', ')}]` : 'N/A'}.`;
       },
-    }),
-    ask_user: tool<AskUserInput, string>({
-      description:
-        'Prepare a concise clarifying question with options when more information is needed from the student.',
-      inputSchema: jsonSchema<AskUserInput>({
-        type: 'object',
-        properties: {
-          question: {
-            type: 'string',
-            description: 'The clarifying question to ask the student.',
-          },
-          options: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Suggested response options.',
-          },
-        },
-        required: ['question', 'options'],
-        additionalProperties: false,
-      }),
-      execute: async ({ question, options }) =>
-        [
-          'Ask the student this clarification in your final response.',
-          `Question: ${question}`,
-          options.length > 0 ? `Options: ${options.join(' | ')}` : undefined,
-        ].filter(Boolean).join('\n'),
     }),
   };
 }

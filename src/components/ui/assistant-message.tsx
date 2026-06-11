@@ -5,7 +5,6 @@ import { ChainOfThought } from './chain-of-thought';
 import { ToolFallback } from './tool-fallback';
 import { Sources } from './sources';
 import {
-  AskUserToolCall,
   ComputerToolCall,
   GetWebContentToolCall,
   LoadSkillToolCall,
@@ -28,12 +27,6 @@ export function AssistantMessage({ submitUserResponse }: AssistantMessageProps) 
             ),
             tools: {
               by_name: {
-                ask_user: ({ args, result, toolCallId }) => (
-                  <AskUserToolCall
-                    part={{ args, result, toolCallId }}
-                    submitUserResponse={submitUserResponse}
-                  />
-                ),
                 computer: ({ args, result }) => (
                   <ComputerToolCall args={args} result={result} />
                 ),

@@ -1354,25 +1354,7 @@ export function useSkChatManager({
                   return `${titlePart}${urlPart}\n${markdown || 'No web content captured.'}${contentDataStr}`;
                 },
               } as any,
-              ask_user: {
-                description: 'Ask the user a clarifying question with predefined options.',
-                parameters: z.object({
-                  question: z.string(),
-                  options: z.array(z.string()),
-                }),
-                execute: async (
-                  { question, options }: { question: string; options: string[] },
-                  { toolCallId }: { toolCallId: string }
-                ) => {
-                  const userResponse = await new Promise<string>((resolve) => {
-                    askUserResolverRef.current = {
-                      toolCallId,
-                      resolve,
-                    };
-                  });
-                  return userResponse;
-                },
-              } as any,
+
               load_skill: {
                 description: 'Load specialized instructions for a learning skill by name.',
                 parameters: z.object({

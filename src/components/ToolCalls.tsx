@@ -40,69 +40,7 @@ export const convertMessage = (msg: SkChatMessage) => ({
   })) : undefined,
 });
 
-interface AskUserToolCallProps {
-  part: any;
-  submitUserResponse: (toolCallId: string, response: string) => void;
-}
 
-export function AskUserToolCall({ part, submitUserResponse }: AskUserToolCallProps) {
-  const [customVal, setCustomVal] = useState('');
-  const isPending = !part.result;
-
-  const handleSubmitCustom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customVal.trim()) return;
-    submitUserResponse(part.toolCallId, customVal.trim());
-  };
-
-  const handleSelectOption = (option: string) => {
-    submitUserResponse(part.toolCallId, option);
-  };
-
-  if (!isPending) {
-    return (
-      <div className="flex flex-col items-start gap-1 p-3 bg-white dark:bg-slate-900 rounded-xl border border-border/80 shadow-sm mt-2 text-xs">
-        <span className="text-muted-foreground font-medium">Lựa chọn của bạn:</span>
-        <strong className="text-foreground text-sm font-semibold">{part.result}</strong>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-3 p-3.5 bg-white dark:bg-slate-900 border border-border/80 rounded-xl mt-2 text-left shadow-sm w-full">
-      <div className="text-sm font-semibold text-foreground leading-snug">{part.args.question}</div>
-      <div className="flex flex-wrap gap-1.5">
-        {part.args.options?.map((opt: string, i: number) => (
-          <Button
-            key={i}
-            type="button"
-            variant="outline"
-            size="sm"
-            className="rounded-full px-3"
-            onClick={() => handleSelectOption(opt)}
-          >
-            {opt}
-          </Button>
-        ))}
-      </div>
-      <form onSubmit={handleSubmitCustom} className="flex gap-2 mt-1">
-        <input
-          type="text"
-          className="flex-1 px-3 py-1.5 text-xs border border-input rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-          placeholder="Nhập lựa chọn khác..."
-          value={customVal}
-          onChange={(e) => setCustomVal(e.target.value)}
-        />
-        <Button
-          type="submit"
-          size="sm"
-        >
-          Gửi
-        </Button>
-      </form>
-    </div>
-  );
-}
 
 export function ComputerToolCall({ args, result }: { args: any; result: any }) {
   const action = args?.action;

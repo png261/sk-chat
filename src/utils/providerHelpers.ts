@@ -344,9 +344,6 @@ export function getAgentPetState(
         (p.result === undefined || p.result === null),
     );
     if (runningToolCall && runningToolCall.type === 'tool-call') {
-      if (runningToolCall.toolName === 'ask_user') {
-        return 'waiting';
-      }
       return 'running';
     }
 
@@ -362,9 +359,6 @@ export function getAgentPetState(
     if (lastPart.type === 'tool-call') {
       const hasResult = lastPart.result !== undefined && lastPart.result !== null;
       if (!hasResult) {
-        if (lastPart.toolName === 'ask_user') {
-          return 'waiting';
-        }
         return 'running';
       }
     } else if (lastPart.type === 'reasoning') {
@@ -417,8 +411,6 @@ export function getAgentSpeechText(
           return 'Đang tương tác với màn hình...';
         case 'load_skill':
           return 'Đang kích hoạt kỹ năng...';
-        case 'ask_user':
-          return 'Đang chờ bạn trả lời...';
         default:
           return `Đang chạy công cụ: ${runningToolCall.toolName}...`;
       }
@@ -443,8 +435,6 @@ export function getAgentSpeechText(
             return 'Đang tương tác với màn hình...';
           case 'load_skill':
             return 'Đang kích hoạt kỹ năng...';
-          case 'ask_user':
-            return 'Đang chờ bạn trả lời...';
           default:
             return `Đang chạy công cụ: ${lastPart.toolName}...`;
         }
