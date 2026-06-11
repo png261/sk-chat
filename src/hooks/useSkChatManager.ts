@@ -637,6 +637,41 @@ export function useSkChatManager({
           const openai = createOpenAI({
             baseURL: apiEndpoint.replace(/\/$/, ''),
             apiKey: apiKey || '',
+            fetch: async (url, init) => {
+              let retries = 3;
+              let delay = 1000;
+              while (retries >= 0) {
+                try {
+                  const res = await fetch(url, init);
+                  if (res.status === 429 && retries > 0) {
+                    console.warn(`[SkChat] Provider 429 rate limited, retrying in ${delay}ms...`);
+                    const retryAfter = res.headers.get('retry-after');
+                    let waitTime = delay;
+                    if (retryAfter) {
+                      const parsed = parseInt(retryAfter, 10);
+                      if (!isNaN(parsed)) {
+                        waitTime = parsed * 1000;
+                      }
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, waitTime));
+                    retries--;
+                    delay *= 2;
+                    continue;
+                  }
+                  return res;
+                } catch (err) {
+                  if (retries > 0) {
+                    console.warn(`[SkChat] Fetch failed, retrying in ${delay}ms...`, err);
+                    await new Promise((resolve) => setTimeout(resolve, delay));
+                    retries--;
+                    delay *= 2;
+                    continue;
+                  }
+                  throw err;
+                }
+              }
+              return fetch(url, init);
+            },
           });
 
           // Build AI SDK formatted messages
